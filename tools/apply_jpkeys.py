@@ -132,7 +132,13 @@ def inject_forks(text: str, entries: str) -> str:
 
 
 def transform(source: str) -> tuple[str, dict[str, str]]:
-    used_morphs = [name for name in MORPHS if contains_token(source, name)]
+    used_morphs = [
+        name
+        for name, _ in sorted(
+            ((name, source.find(name)) for name in MORPHS if contains_token(source, name)),
+            key=lambda item: item[1],
+        )
+    ]
     trigger_map = allocate_morph_triggers(source, used_morphs)
 
     out = source
