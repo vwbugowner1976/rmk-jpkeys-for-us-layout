@@ -42,19 +42,21 @@ DIRECT = {
     "JP_HANZEN": "Grave",
 }
 
-# name: (unshifted RMK action, shifted RMK action)
+# Stable JP morph ABI shared with MyKeebStudio.
+# Do not reorder/reassign these triggers without bumping the ABI.
 MORPHS = {
-    "JP_QUOTEDQUOTE": ("WM(Kc7, LShift)", "WM(Kc2, LShift)"),
-    "JP_EQUALPLUS": ("WM(Minus, LShift)", "WM(Semicolon, LShift)"),
-    "JP_YENPIPE": ("International3", "WM(International3, LShift)"),
-    "JP_SEMICOLONCOLON": ("Semicolon", "Quote"),
-    "JP_BAQTTILDE": ("WM(LeftBracket, LShift)", "WM(Equal, LShift)"),
-    "JP_MINUSUNDER": ("Minus", "WM(International1, LShift)"),
-    "JP_LBRACELBRACKET": ("RightBracket", "WM(RightBracket, LShift)"),
-    "JP_RBRACERBRACKET": ("Backslash", "WM(Backslash, LShift)"),
+    "JP_MINUSUNDER": ("F13", "Minus", "WM(International1, LShift)"),
+    "JP_EQUALPLUS": ("F14", "WM(Minus, LShift)", "WM(Semicolon, LShift)"),
+    "JP_SEMICOLONCOLON": ("F15", "Semicolon", "Quote"),
+    "JP_QUOTEDQUOTE": ("F16", "WM(Kc7, LShift)", "WM(Kc2, LShift)"),
+    "JP_YENPIPE": ("F17", "International3", "WM(International3, LShift)"),
+    "JP_BAQTTILDE": ("F18", "WM(LeftBracket, LShift)", "WM(Equal, LShift)"),
+    "JP_LBRACELBRACKET": ("F19", "RightBracket", "WM(RightBracket, LShift)"),
+    "JP_RBRACERBRACKET": ("F20", "Backslash", "WM(Backslash, LShift)"),
 }
 
-DUMMY_KEYS = [f"F{i}" for i in range(13, 25)]
+JPKEYS_ABI = 1
+
 TOKEN_RE = re.compile(r"(?<![A-Za-z0-9_])({})(?![A-Za-z0-9_])")
 
 
@@ -71,15 +73,17 @@ def replace_token(text: str, token: str, replacement: str) -> str:
 
 
 def allocate_morph_triggers(source: str, used_morphs: list[str]) -> dict[str, str]:
-    occupied = {key for key in DUMMY_KEYS if contains_token(source, key)}
-    free = [key for key in DUMMY_KEYS if key not in occupied]
-    if len(free) < len(used_morphs):
+    trigger_map = {name: MORPHS[name][0] for name in used_morphs}
+    collisions = sorted(
+        trigger for name, trigger in trigger_map.items()
+        if contains_token(source, trigger)
+    )
+    if collisions:
         raise ValueError(
-            "Not enough free F13..F24 virtual keys for JP morphs. "
-            f"Need {len(used_morphs)}, have {len(free)}. "
-            "Free some of F13..F24 in the source keymap."
+            "JP Keys ABI v1 reserves F13..F20 for shift-dependent JP behaviors. "
+            "Source keymap already uses: " + ", ".join(collisions)
         )
-    return dict(zip(used_morphs, free))
+    return trigger_map
 
 
 def fork_entries(trigger_map: dict[str, str]) -> str:
@@ -88,7 +92,7 @@ def fork_entries(trigger_map: dict[str, str]) -> str:
         if name not in trigger_map:
             continue
         trigger = trigger_map[name]
-        negative, positive = MORPHS[name]
+        _, negative, positive = MORPHS[name]
         lines.append(f'  # {name}')
         lines.append(
             '  { trigger = "%s", negative_output = "%s", positive_output = "%s", '
@@ -132,13 +136,7 @@ def inject_forks(text: str, entries: str) -> str:
 
 
 def transform(source: str) -> tuple[str, dict[str, str]]:
-    used_morphs = [
-        name
-        for name, _ in sorted(
-            ((name, source.find(name)) for name in MORPHS if contains_token(source, name)),
-            key=lambda item: item[1],
-        )
-    ]
+    used_morphs = [name for name in MORPHS if contains_token(source, name)]
     trigger_map = allocate_morph_triggers(source, used_morphs)
 
     out = source
