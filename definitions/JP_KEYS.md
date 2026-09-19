@@ -37,3 +37,21 @@ These names mirror the behaviors from `zmk-behavior-jpkeysforuslayout`.
 | JP_HANZEN | Grave / Hankaku-Zenkaku style usage |
 
 Shift-dependent tokens are expanded to RMK `[behavior.fork]` entries. The transformer uses free keys from F13..F24 as internal triggers only.
+
+
+## ABI v1
+
+Shift-dependent behaviors have fixed internal trigger keys so host configurators can identify them consistently:
+
+| JP behavior | Internal trigger |
+| --- | --- |
+| JP_MINUSUNDER | F13 |
+| JP_EQUALPLUS | F14 |
+| JP_SEMICOLONCOLON | F15 |
+| JP_QUOTEDQUOTE | F16 |
+| JP_YENPIPE | F17 |
+| JP_BAQTTILDE | F18 |
+| JP_LBRACELBRACKET | F19 |
+| JP_RBRACERBRACKET | F20 |
+
+These F-keys are implementation details and are consumed by RMK fork processing before HID output.
