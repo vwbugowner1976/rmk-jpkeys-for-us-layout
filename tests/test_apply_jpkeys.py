@@ -23,10 +23,15 @@ class TransformTests(unittest.TestCase):
         self.assertIn('positive_output = "WM(International1, LShift)"', out)
         self.assertLess(out.index("[behavior.fork]"), out.index("[ble]"))
 
-    def test_avoids_used_function_key(self):
-        out, mapping = mod.transform('[keymap]\nkeys = """F13 JP_EQUALPLUS"""\n')
-        self.assertEqual("F14", mapping["JP_EQUALPLUS"])
-        self.assertIn("F13 F14", out)
+    def test_rejects_reserved_trigger_collision(self):
+        with self.assertRaises(ValueError):
+            mod.transform('[keymap]\nkeys = """F13 JP_EQUALPLUS"""\n')
+
+    def test_stable_trigger_mapping(self):
+        out, mapping = mod.transform('[keymap]\nkeys = """JP_QUOTEDQUOTE JP_YENPIPE"""\n')
+        self.assertEqual("F16", mapping["JP_QUOTEDQUOTE"])
+        self.assertEqual("F17", mapping["JP_YENPIPE"])
+        self.assertIn("F16 F17", out)
 
     def test_merges_existing_forks(self):
         source = '''[keymap]
@@ -39,8 +44,8 @@ forks = [
 '''
         out, _ = mod.transform(source)
         self.assertEqual(1, out.count("[behavior.fork]"))
-        self.assertIn("JP_YENPIPE", out)
-        self.assertIn('trigger = "F13"', out)
+        self.assertNotIn("JP_YENPIPE", out)
+        self.assertIn('trigger = "F17"', out)
 
 
 if __name__ == "__main__":
