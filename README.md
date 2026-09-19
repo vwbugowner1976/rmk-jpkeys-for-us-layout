@@ -39,9 +39,18 @@ See [definitions/JP_KEYS.md](definitions/JP_KEYS.md). It includes:
 
 ## Shift-dependent keys
 
-RMK forks need a trigger action. The transformer automatically reserves unused keys from **F13..F24** only in the generated file. They are internal implementation details and are replaced by the fork before HID output.
+RMK forks need a trigger action. The transformer uses a **stable ABI v1** for shift-dependent JP keys. F13..F20 are reserved as internal triggers:
 
-If a keyboard already uses some of F13..F24, those keys are skipped automatically. Generation fails rather than silently colliding when too few virtual triggers remain.
+- F13 = JP_MINUSUNDER
+- F14 = JP_EQUALPLUS
+- F15 = JP_SEMICOLONCOLON
+- F16 = JP_QUOTEDQUOTE
+- F17 = JP_YENPIPE
+- F18 = JP_BAQTTILDE
+- F19 = JP_LBRACELBRACKET
+- F20 = JP_RBRACERBRACKET
+
+This fixed mapping lets configurators such as MyKeebStudio recognize and set the same JP behaviors across different RMK keyboards. Generation fails if the source keymap already uses a reserved trigger.
 
 ## Recommended project layout
 
