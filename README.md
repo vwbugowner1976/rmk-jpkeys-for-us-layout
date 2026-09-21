@@ -64,10 +64,23 @@ your-rmk-keyboard/
 
 Pin this repository to a known commit in your local build script, regenerate `keyboard.toml`, then run the normal RMK build.
 
+## Runtime configurator ABI
+
+If the firmware will be edited after flashing by a runtime configurator such as
+MyKeebStudio, generate all stable ABI morph forks even when they are not present
+in the default source keymap:
+
+```bash
+python3 tools/apply_jpkeys.py keyboard.jp.toml keyboard.toml --runtime-abi
+```
+
+This reserves and emits F13..F20 so every JP morph remains available for runtime
+keymap changes.
+
 ## Verify generated output
 
 ```bash
-python3 tools/apply_jpkeys.py keyboard.jp.toml keyboard.toml --check
+python3 tools/apply_jpkeys.py keyboard.jp.toml keyboard.toml --runtime-abi --check
 ```
 
 ## Tests
