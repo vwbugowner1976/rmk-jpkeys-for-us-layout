@@ -135,8 +135,13 @@ def inject_forks(text: str, entries: str) -> str:
     return text.rstrip() + "\n" + block
 
 
-def transform(source: str) -> tuple[str, dict[str, str]]:
-    used_morphs = [name for name in MORPHS if contains_token(source, name)]
+def transform(source: str, runtime_abi: bool = False) -> tuple[str, dict[str, str]]:
+    # Runtime configurators such as MyKeebStudio can assign any ABI morph after
+    # flashing. In that mode all stable triggers must exist even when a morph is
+    # absent from the source keymap defaults.
+    used_morphs = list(MORPHS) if runtime_abi else [
+        name for name in MORPHS if contains_token(source, name)
+    ]
     trigger_map = allocate_morph_triggers(source, used_morphs)
 
     out = source
@@ -162,11 +167,16 @@ def main() -> int:
         action="store_true",
         help="do not write; fail if output is missing or differs",
     )
+    parser.add_argument(
+        "--runtime-abi",
+        action="store_true",
+        help="reserve and emit all stable F13..F20 JP morph triggers for runtime configurators",
+    )
     args = parser.parse_args()
 
     source = args.input.read_text(encoding="utf-8")
     try:
-        rendered, trigger_map = transform(source)
+        rendered, trigger_map = transform(source, runtime_abi=args.runtime_abi)
     except ValueError as exc:
         print(f"rmk-jpkeys: {exc}", file=sys.stderr)
         return 2
