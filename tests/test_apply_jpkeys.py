@@ -47,6 +47,17 @@ forks = [
         self.assertNotIn("JP_YENPIPE", out)
         self.assertIn('trigger = "F17"', out)
 
+    def test_runtime_abi_emits_all_morph_triggers(self):
+        out, mapping = mod.transform('[keymap]\nkeys = """JP_AT"""\n', runtime_abi=True)
+        self.assertEqual(set(mod.MORPHS), set(mapping))
+        for number in range(13, 21):
+            self.assertIn(f'trigger = "F{number}"', out)
+        self.assertIn("LeftBracket", out)
+
+    def test_runtime_abi_rejects_any_reserved_trigger_collision(self):
+        with self.assertRaises(ValueError):
+            mod.transform('[keymap]\nkeys = """F20 JP_AT"""\n', runtime_abi=True)
+
 
 if __name__ == "__main__":
     unittest.main()
